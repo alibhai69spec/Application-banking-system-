@@ -1,0 +1,486 @@
+using System;
+using System.IO;
+
+// =====================================================
+//  CLASS 1: User
+//  Stores login info saved in sharp.txt
+// =====================================================
+class User
+{
+    public string username;
+    public string password;
+
+    // Constructor
+    public User(string u, string p)
+    {
+        username = u;
+        password = p;
+    }
+}
+
+// =====================================================
+//  CLASS 2: BankAccount
+//  Stores banking info saved in git.txt
+// =====================================================
+class BankAccount
+{
+    public string username;
+    public string password;
+    public double balance;
+
+    // Constructor
+    public BankAccount(string u, string p, double b)
+    {
+        username = u;
+        password = p;
+        balance = b;
+    }
+}
+
+// =====================================================
+//  CLASS 3: Bank  (main logic — NO static methods)
+// =====================================================
+class Bank
+{
+    // Two file names stored as class-level variables
+    string sharpFile = "sharp.txt";
+    string gitFile = "git.txt";
+
+    // Constructor — sets up files when Bank object is created
+    public Bank()
+    {
+        if (!File.Exists(sharpFile))
+            File.WriteAllText(sharpFile, "");
+
+        if (!File.Exists(gitFile))
+            File.WriteAllText(gitFile, "admin|0001|0\n");
+    }
+
+    // --------------------------------------------------
+    //  BANNER
+    // --------------------------------------------------
+    public void ShowBanner()
+    {
+        Console.Clear();
+        Console.WriteLine("==========================================");
+        Console.WriteLine("#                                        #");
+        Console.WriteLine("#       WELCOME TO C# BANKING SYSTEM     #");
+        Console.WriteLine("#                                        #");
+        Console.WriteLine("==========================================");
+    }
+
+    // --------------------------------------------------
+    //  RUN — main loop
+    // --------------------------------------------------
+    public void Run()
+    {
+        ShowBanner();
+
+        bool running = true;
+        while (running)
+        {
+            Console.WriteLine("\n==========================================");
+            Console.WriteLine("               MAIN MENU                  ");
+            Console.WriteLine("==========================================");
+            Console.WriteLine("  [1] Sign In");
+            Console.WriteLine("  [2] Sign Up");
+            Console.WriteLine("  [3] Exit");
+            Console.WriteLine("==========================================");
+            Console.Write("  Your Choice: ");
+            string choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                bool ok = DoSignIn();
+                if (ok)
+                    ShowBankingMenu();
+            }
+            else if (choice == "2")
+            {
+                DoSignUp();
+            }
+            else if (choice == "3")
+            {
+                running = false;
+                Console.WriteLine("\n  Goodbye! Thank you for using our bank.");
+                Console.WriteLine("  ==========================================");
+            }
+            else
+            {
+                Console.WriteLine("\n  [!] Invalid choice. Try again.");
+            }
+        }
+    }
+
+    // --------------------------------------------------
+    //  SIGN UP
+    // --------------------------------------------------
+    public void DoSignUp()
+    {
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("               SIGN UP                    ");
+        Console.WriteLine("==========================================");
+
+        string uname = GetUsername("  Create Username (letters only): ");
+        string pass = GetPassword("  Create Password (4 digits only): ");
+
+        File.AppendAllText(sharpFile, uname + "|" + pass + "\n");
+
+        Console.WriteLine("\n  [✔] Account created! Please sign in.");
+    }
+
+    // --------------------------------------------------
+    //  SIGN IN — returns true if successful
+    // --------------------------------------------------
+    public bool DoSignIn()
+    {
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("               SIGN IN                    ");
+        Console.WriteLine("==========================================");
+
+        Console.Write("  Username: ");
+        string uname = Console.ReadLine();
+        Console.Write("  Password: ");
+        string pass = Console.ReadLine();
+
+        string[] lines = File.ReadAllLines(sharpFile);
+        bool found = false;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string[] parts = lines[i].Split('|');
+            if (parts.Length == 2)
+            {
+                if (parts[0] == uname && parts[1] == pass)
+                {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (found)
+        {
+            Console.WriteLine("\n  [✔] Sign in successful! Welcome, " + uname + "!");
+            return true;
+        }
+        else
+        {
+            Console.WriteLine("\n  [✗] User not found. Please sign up first.");
+            return false;
+        }
+    }
+
+    // --------------------------------------------------
+    //  BANKING MENU (after sign in)
+    // --------------------------------------------------
+    public void ShowBankingMenu()
+    {
+        bool stay = true;
+        while (stay)
+        {
+            Console.WriteLine("\n==========================================");
+            Console.WriteLine("            BANKING PORTAL                ");
+            Console.WriteLine("==========================================");
+            Console.WriteLine("  [1] Admin");
+            Console.WriteLine("  [2] Customer");
+            Console.WriteLine("  [3] Logout");
+            Console.WriteLine("==========================================");
+            Console.Write("  Your Choice: ");
+            string choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                AdminPanel();
+            }
+            else if (choice == "2")
+            {
+                CustomerPanel();
+            }
+            else if (choice == "3")
+            {
+                stay = false;
+                Console.WriteLine("\n  [✔] Logged out successfully.");
+            }
+            else
+            {
+                Console.WriteLine("\n  [!] Invalid choice.");
+            }
+        }
+    }
+
+    // --------------------------------------------------
+    //  ADMIN PANEL
+    // --------------------------------------------------
+    public void AdminPanel()
+    {
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("             ADMIN LOGIN                  ");
+        Console.WriteLine("==========================================");
+
+        Console.Write("  Admin Username: ");
+        string uname = Console.ReadLine();
+        Console.Write("  Admin Password: ");
+        string pass = Console.ReadLine();
+
+        if (uname == "admin" && pass == "0001")
+        {
+            Console.WriteLine("\n  [✔] Admin access granted!\n");
+            Console.WriteLine("------------------------------------------");
+            Console.WriteLine("  No.  Username           Balance (PKR)");
+            Console.WriteLine("------------------------------------------");
+
+            string[] lines = File.ReadAllLines(gitFile);
+            int count = 0;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string[] parts = lines[i].Split('|');
+                if (parts.Length == 3)
+                {
+                    count++;
+                    Console.WriteLine("  " + count + ".   " + parts[0] + "          " + parts[2]);
+                }
+            }
+
+            if (count == 0)
+                Console.WriteLine("  No records found.");
+
+            Console.WriteLine("------------------------------------------");
+        }
+        else
+        {
+            Console.WriteLine("\n  [✗] Invalid user or password.");
+        }
+    }
+
+    // --------------------------------------------------
+    //  CUSTOMER PANEL
+    // --------------------------------------------------
+    public void CustomerPanel()
+    {
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("            CUSTOMER LOGIN                ");
+        Console.WriteLine("==========================================");
+
+        Console.Write("  Username: ");
+        string uname = Console.ReadLine();
+        Console.Write("  Password: ");
+        string pass = Console.ReadLine();
+
+        string[] lines = File.ReadAllLines(gitFile);
+        BankAccount account = null;
+        int accountLine = -1;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string[] parts = lines[i].Split('|');
+            if (parts.Length == 3)
+            {
+                if (parts[0] == uname && parts[1] == pass)
+                {
+                    // Create a BankAccount object using constructor
+                    account = new BankAccount(parts[0], parts[1], double.Parse(parts[2]));
+                    accountLine = i;
+                    break;
+                }
+            }
+        }
+
+        if (account != null)
+        {
+            Console.WriteLine("\n  [✔] Welcome, " + account.username + "!");
+            AccountMenu(account, accountLine);
+        }
+        else
+        {
+            Console.WriteLine("\n  [✗] Account not found in banking records.");
+            Console.Write("\n  Create a new bank account? (y/n): ");
+            string ans = Console.ReadLine();
+
+            if (ans == "y" || ans == "Y")
+                CreateBankAccount();
+        }
+    }
+
+    // --------------------------------------------------
+    //  CREATE NEW BANK ACCOUNT
+    // --------------------------------------------------
+    public void CreateBankAccount()
+    {
+        Console.WriteLine("\n==========================================");
+        Console.WriteLine("         CREATE BANK ACCOUNT              ");
+        Console.WriteLine("==========================================");
+
+        string uname = GetUsername("  New Username (letters only): ");
+        string pass = GetPassword("  New Password (4 digits only): ");
+
+        File.AppendAllText(gitFile, uname + "|" + pass + "|0\n");
+
+        Console.WriteLine("\n  [✔] Bank account created for '" + uname + "'!");
+        Console.WriteLine("  Please login again as Customer.");
+    }
+
+    // --------------------------------------------------
+    //  ACCOUNT MENU
+    // --------------------------------------------------
+    public void AccountMenu(BankAccount acc, int lineIndex)
+    {
+        bool stay = true;
+        while (stay)
+        {
+            Console.WriteLine("\n==========================================");
+            Console.WriteLine("  Account: " + acc.username);
+            Console.WriteLine("==========================================");
+            Console.WriteLine("  [1] Deposit");
+            Console.WriteLine("  [2] Withdraw");
+            Console.WriteLine("  [3] Check Balance");
+            Console.WriteLine("  [4] Back");
+            Console.WriteLine("==========================================");
+            Console.Write("  Your Choice: ");
+            string choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                Console.Write("  Enter deposit amount: ");
+                double amount = double.Parse(Console.ReadLine());
+
+                if (amount > 0)
+                {
+                    acc.balance = acc.balance + amount;
+                    SaveBalance(acc, lineIndex);
+                    Console.WriteLine("\n  [✔] Deposit successful!");
+                    Console.WriteLine("  New Balance: " + acc.balance + " PKR");
+                }
+                else
+                {
+                    Console.WriteLine("\n  [!] Please enter a valid amount.");
+                }
+            }
+            else if (choice == "2")
+            {
+                Console.Write("  Enter withdrawal amount: ");
+                double amount = double.Parse(Console.ReadLine());
+
+                if (amount <= 0)
+                {
+                    Console.WriteLine("\n  [!] Please enter a valid amount.");
+                }
+                else if (amount > acc.balance)
+                {
+                    Console.WriteLine("\n  [✗] Insufficient funds.");
+                }
+                else
+                {
+                    acc.balance = acc.balance - amount;
+                    SaveBalance(acc, lineIndex);
+                    Console.WriteLine("\n  [✔] Withdrawal successful!");
+                    Console.WriteLine("  New Balance: " + acc.balance + " PKR");
+                }
+            }
+            else if (choice == "3")
+            {
+                Console.WriteLine("\n------------------------------------------");
+                Console.WriteLine("  Current Balance: " + acc.balance + " PKR");
+                Console.WriteLine("------------------------------------------");
+            }
+            else if (choice == "4")
+            {
+                stay = false;
+            }
+            else
+            {
+                Console.WriteLine("\n  [!] Invalid choice.");
+            }
+        }
+    }
+
+    // --------------------------------------------------
+    //  SAVE UPDATED BALANCE to git.txt
+    // --------------------------------------------------
+    public void SaveBalance(BankAccount acc, int lineIndex)
+    {
+        string[] lines = File.ReadAllLines(gitFile);
+        lines[lineIndex] = acc.username + "|" + acc.password + "|" + acc.balance;
+        File.WriteAllLines(gitFile, lines);
+    }
+
+    // --------------------------------------------------
+    //  INPUT HELPER: letters-only username
+    // --------------------------------------------------
+    public string GetUsername(string prompt)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            string input = Console.ReadLine();
+            bool valid = true;
+
+            if (input == null || input.Length == 0)
+                valid = false;
+
+            if (valid)
+            {
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if (!char.IsLetter(input[i]))
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if (valid)
+                return input;
+
+            Console.WriteLine("  [!] Username must contain letters only. Try again.");
+        }
+    }
+
+    // --------------------------------------------------
+    //  INPUT HELPER: exactly 4-digit password
+    // --------------------------------------------------
+    public string GetPassword(string prompt)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            string input = Console.ReadLine();
+            bool valid = true;
+
+            if (input == null || input.Length != 4)
+                valid = false;
+
+            if (valid)
+            {
+                for (int i = 0; i < input.Length; i++)
+                {
+                    if (!char.IsDigit(input[i]))
+                    {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if (valid)
+                return input;
+
+            Console.WriteLine("  [!] Password must be exactly 4 digits. Try again.");
+        }
+    }
+}
+
+// =====================================================
+//  PROGRAM — entry point
+//  Creates a Bank object and calls Run()
+// =====================================================
+class Program
+{
+    static void Main()
+    {
+        Bank myBank = new Bank();   // object created here
+        myBank.Run();               // program starts
+    }
+}
